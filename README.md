@@ -19,7 +19,7 @@ The project focuses on demonstrating practical data engineering workflows, inclu
 - Data validation
 - Preparation of a final ML-ready dataset
 
-The complete data transformation workflow is implemented using **T-SQL and SQL Server**.
+The pipeline is implemented using **T-SQL and SQL Server**, with each stage being developed incrementally.
 
 ---
 
@@ -427,6 +427,106 @@ The findings from this phase will be used to define the transformation and clean
 
 ---
 
+## Phase 5 — Data Cleansing & Standardization
+
+**Status: Complete**
+
+The findings from the data-quality audit were used to define controlled cleansing and standardization rules.
+
+The raw data remains unchanged while cleaned and standardized records are produced in the `stg` schema.
+
+### Reference Mapping Table
+
+A reference mapping table was created to standardize inconsistent vehicle-company values.
+
+The mapping table contains:
+
+- Original source value
+- Standardized manufacturer
+- Standardized vehicle model
+- Vehicle type
+
+Examples of standardization include:
+
+- `Hero Motocrop` → `Hero MotoCorp`
+- `Mahindra` → `Mahindra & Mahindra`
+- `Ford EcoSport` → Manufacturer: `Ford`, Model: `EcoSport`, Type: `Car`
+- `Hyundai Creta` → Manufacturer: `Hyundai`, Model: `Creta`, Type: `Car`
+
+The mapping table provides a controlled reference layer instead of embedding standardization rules directly into the transformation query.
+
+### Clean Staging Table
+
+A cleaned staging table was created under the `stg` schema.
+
+The staging table converts the raw source representation into typed and standardized fields, including:
+
+- Integer customer identifiers
+- Trimmed city and state values
+- Cleaned service history
+- Cleaned problem and solution fields
+- Standardized manufacturer
+- Standardized vehicle model
+- Vehicle type
+- Original vehicle-company value for traceability
+- Processing timestamp
+
+### Deduplication
+
+Exact duplicate source records are removed using `ROW_NUMBER()`.
+
+Duplicate detection is performed across all source columns, allowing one copy of an exact duplicate record to be retained.
+
+### Data Cleansing
+
+The transformation applies `TRIM()` to remove leading and trailing whitespace from:
+
+- Customer ID
+- City
+- State
+- Service history
+- Common problem
+- Solution used
+- Vehicle company
+
+### Data Type Standardization
+
+The source customer identifier is converted from `VARCHAR` to `INT` using `TRY_CONVERT()`.
+
+This moves the customer identifier from its raw source representation into a validated staging data type.
+
+### Vehicle Standardization
+
+The cleaned vehicle-company value is matched against the reference mapping table to populate:
+
+- Manufacturer
+- Vehicle model
+- Vehicle type
+
+The original vehicle-company value is also retained in the staging table for traceability.
+
+---
+
+## Phase 6 — Data Transformation
+
+**Status: Complete**
+
+The raw source data is transformed into a structured staging representation in `stg.vehicle_service_clean`.
+
+The transformation includes:
+
+- Converting `customer_id_raw` from `VARCHAR` to `INT`
+- Removing exact duplicate records
+- Trimming whitespace from source text fields
+- Applying vehicle-company reference mappings
+- Separating manufacturer, vehicle model, and vehicle type into dedicated columns
+- Retaining the original vehicle-company value for traceability
+- Recording the processing timestamp
+
+The resulting staging table provides a cleaner and more structured representation of the source data for subsequent normalization, analysis, and feature engineering.
+
+---
+
 # Repository Structure
 
 The project is being developed using the following structure:
@@ -444,12 +544,15 @@ vehicle-service-repair-data-pipeline/
 │   ├── 02_create_raw_tables.sql
 │   ├── 03_load_csv.sql
 │   ├── 04_data_profiling.sql
-│   └── 05_data_quality_audit.sql
+│   ├── 05_data_quality_audit.sql
+│   ├── 06_reference_mapping_tables.sql
+│   └── 07_create_clean_tables__clean_transform.sql
 │
 └── README.md
 ```
 
-> **Note:** The repository structure reflects the complete planned pipeline. SQL scripts and documentation are being added incrementally as each phase is completed.
+> **Note:** The repository structure reflects the current state of the project.
+> SQL scripts and documentation are being added incrementally as each phase is completed.
 
 ---
 
@@ -461,8 +564,8 @@ vehicle-service-repair-data-pipeline/
 | 2     | Schema architecture                | ✅ Complete |
 | 3     | Raw table creation & CSV ingestion | ✅ Complete |
 | 4     | Data profiling & quality audit     | ✅ Complete |
-| 5     | Data cleansing & standardization   | ⏳ Planned  |
-| 6     | Data transformation                | ⏳ Planned  |
+| 5     | Data cleansing & standardization   | ✅ Complete |
+| 6     | Data transformation                | ✅ Complete |
 | 7     | Data normalization                 | ⏳ Planned  |
 | 8     | Feature engineering                | ⏳ Planned  |
 | 9     | Exploratory data analysis          | ⏳ Planned  |
@@ -484,6 +587,10 @@ vehicle-service-repair-data-pipeline/
 - String manipulation
 - Aggregations
 - Data type conversion
+- `ROW_NUMBER()`
+- `LEFT JOIN`
+- `TRY_CONVERT()`
+- `TRIM()`
 
 ### Data Engineering
 
@@ -494,6 +601,11 @@ vehicle-service-repair-data-pipeline/
 - Data-quality auditing
 - Data lineage
 - Layered database architecture
+- Reference mapping tables
+- Staging table design
+- Data standardization
+- Raw-to-staging transformation
+- Deduplication
 
 ### Data Quality
 
@@ -503,6 +615,10 @@ vehicle-service-repair-data-pipeline/
 - Data-type validation
 - Formatting validation
 - Invalid-value detection
+- Duplicate record removal
+- Whitespace cleansing
+- Identifier type validation
+- Standardization rule implementation
 
 ### Engineering Practices
 
@@ -527,12 +643,19 @@ vehicle-service-repair-data-pipeline/
 - Raw table load verification
 - Data profiling
 - Data-quality audit
+- Vehicle-company reference mapping table
+- Data cleansing and standardization
+- Exact duplicate removal
+- Clean staging table creation
+- Raw-to-staging data transformation
+- Customer ID data type conversion
+- Vehicle manufacturer, model, and type standardization
 
 ## Next
 
-**Phase 5 — Data Cleansing & Standardization**
+**Phase 7 — Data Normalization**
 
-The next stage will use the findings from the data-quality audit to develop controlled cleansing and transformation rules.
+The next stage will transform the cleaned staging data into normalized relational structures, including the decomposition of multi-valued service-history data.
 
 The raw dataset will remain unchanged while cleaned data is produced in the staging layer.
 
@@ -543,14 +666,6 @@ The raw dataset will remain unchanged while cleaned data is produced in the stag
 As development continues, the project will progress through:
 
 ```text
-Phase 5
-Data Cleansing & Standardization
-        │
-        ▼
-Phase 6
-Data Transformation
-        │
-        ▼
 Phase 7
 Data Normalization
         │
