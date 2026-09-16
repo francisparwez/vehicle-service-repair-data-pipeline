@@ -7,7 +7,7 @@ CREATE TABLE analytics.customer_service_history
 INSERT INTO analytics.customer_service_history
 (
     customer_id,
-    [service_name]
+    service_name
 )
 
 SELECT
@@ -19,3 +19,12 @@ FROM stg.vehicle_service_clean AS v
 CROSS APPLY STRING_SPLIT(v.service_history, ';') AS s
 
 WHERE TRIM(s.value) <> '';
+
+-- STANDARDIZE SERVICE NAMES
+
+SELECT
+    service_name,
+    COUNT(*) AS frequency
+FROM analytics.customer_service_history
+GROUP BY service_name
+ORDER BY frequency DESC;
