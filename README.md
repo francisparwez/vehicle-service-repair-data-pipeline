@@ -356,8 +356,7 @@ The profiling results provide the initial baseline for the subsequent data-quali
 
 ### Data Quality Audit
 
-The data-quality audit investigates specific issues identified during
-the initial profiling stage.
+The data-quality audit investigates specific issues identified during the initial profiling stage.
 
 The current audit covers:
 
@@ -372,24 +371,20 @@ The current audit covers:
 
 #### Invalid Customer IDs
 
-Customer identifiers are tested using `TRY_CONVERT(INT, ...)` to identify
-values that cannot be converted into valid integer identifiers.
+Customer identifiers are tested using `TRY_CONVERT(INT, ...)` to identify values that cannot be converted into valid integer identifiers.
 
 #### Exact Duplicate Records
 
-All source columns are compared together to identify records where the
-complete source row occurs more than once.
+All source columns are compared together to identify records where the complete source row occurs more than once.
 
 #### Duplicate Customer IDs
 
-Customer IDs are independently checked for multiple occurrences. This
-helps distinguish repeated business identifiers from exact duplicate
+Customer IDs are independently checked for multiple occurrences. This helps distinguish repeated business identifiers from exact duplicate
 records.
 
 #### Whitespace Issues
 
-Text columns are compared against their `TRIM()` values to identify
-leading or trailing whitespace.
+Text columns are compared against their `TRIM()` values to identify leading or trailing whitespace.
 
 The audit covers:
 
@@ -402,14 +397,11 @@ The audit covers:
 
 #### Categorical Consistency
 
-Distinct trimmed vehicle-company values are reviewed to identify
-inconsistent categorical representations.
+Distinct trimmed vehicle-company values are reviewed to identify inconsistent categorical representations.
 
-A before-and-after comparison using `TRIM()` is also performed to show
-how whitespace can create duplicate categorical values.
+A before-and-after comparison using `TRIM()` is also performed to show how whitespace can create duplicate categorical values.
 
-No cleaning transformations are applied directly to the raw source
-layer. The audit only identifies and analyzes quality issues.
+No cleaning transformations are applied directly to the raw source layer. The audit only identifies and analyzes quality issues.
 
 ### Key Data Quality Dimensions
 
@@ -420,8 +412,6 @@ layer. The audit only identifies and analyzes quality issues.
 | Validity     | Invalid customer identifiers            |
 | Consistency  | Conflicting categorical representations |
 | Conformity   | Whitespace and formatting consistency   |
-
-No cleaning transformations are applied directly to the raw source layer.
 
 The findings from this phase will be used to define the transformation and cleansing rules implemented in the staging layer.
 
@@ -527,6 +517,68 @@ The resulting staging table provides a cleaner and more structured representatio
 
 ---
 
+## Phase 7 — Data Normalization
+
+**Status: Complete**
+
+The cleaned staging data contains `service_history` values where multiple services are stored within a single field using a semicolon (`;`) delimiter.
+
+For example:
+
+```text
+Oil Change; Brake Fluid Change
+```
+
+### Service History Normalization
+
+The multi-valued `service_history` field is decomposed into individual service records using `STRING_SPLIT()` and `CROSS APPLY()`.
+
+For example, a source value such as:
+
+```text
+Oil Change; Brake Fluid Change
+```
+
+The normalized records are stored in:
+
+```text
+analytics.customer_service_history
+```
+
+with the following structure:
+
+| Column         | Description                  |
+| -------------- | ---------------------------- |
+| `customer_id`  | Customer identifier          |
+| `service_name` | Individual service performed |
+
+For example:
+
+| customer_id | service_name       |
+| ----------: | ------------------ |
+|         101 | Oil Change         |
+|         101 | Brake Fluid Change |
+
+`TRIM()` is applied to each split value to remove surrounding whitespace, and blank service values are excluded.
+
+This converts the original multi-valued field into a **one-to-many customer-to-service relationship**, making the data easier to query, aggregate, analyze, and use for downstream feature engineering.
+
+---
+
+### Service Name Standardization
+
+Service-name standardization will be handled as a subsequent data-quality
+step.
+
+The normalized service names will first be reviewed for semantic similarities
+and inconsistencies before any values are combined or standardized.
+
+Similar-looking service names will not automatically be treated as duplicates.
+Only transformations supported by the underlying meaning of the service will
+be applied.
+
+---
+
 # Repository Structure
 
 The project is being developed using the following structure:
@@ -546,7 +598,8 @@ vehicle-service-repair-data-pipeline/
 │   ├── 04_data_profiling.sql
 │   ├── 05_data_quality_audit.sql
 │   ├── 06_reference_mapping_tables.sql
-│   └── 07_create_clean_tables__clean_transform.sql
+│   ├── 07_create_clean_tables__clean_transform.sql
+│   └── 08_normalize_service_history__standardize-names.sql
 │
 └── README.md
 ```
@@ -566,7 +619,7 @@ vehicle-service-repair-data-pipeline/
 | 4     | Data profiling & quality audit     | ✅ Complete |
 | 5     | Data cleansing & standardization   | ✅ Complete |
 | 6     | Data transformation                | ✅ Complete |
-| 7     | Data normalization                 | ⏳ Planned  |
+| 7     | Data normalization                 | ✅ Complete |
 | 8     | Feature engineering                | ⏳ Planned  |
 | 9     | Exploratory data analysis          | ⏳ Planned  |
 | 10    | Data validation                    | ⏳ Planned  |
@@ -591,6 +644,9 @@ vehicle-service-repair-data-pipeline/
 - `LEFT JOIN`
 - `TRY_CONVERT()`
 - `TRIM()`
+- `STRING_SPLIT()`
+- `CROSS APPLY`
+- One-to-many relational transformations
 
 ### Data Engineering
 
@@ -606,6 +662,9 @@ vehicle-service-repair-data-pipeline/
 - Data standardization
 - Raw-to-staging transformation
 - Deduplication
+- Relational data normalization
+- Semi-structured data decomposition
+- One-to-many relationship modeling
 
 ### Data Quality
 
@@ -650,14 +709,17 @@ vehicle-service-repair-data-pipeline/
 - Raw-to-staging data transformation
 - Customer ID data type conversion
 - Vehicle manufacturer, model, and type standardization
+- Service-history normalization
+- Semi-structured service-history decomposition
+- Normalized customer-service relationship table
 
 ## Next
 
-**Phase 7 — Data Normalization**
+**Phase 8 — Feature Engineering**
 
-The next stage will transform the cleaned staging data into normalized relational structures, including the decomposition of multi-valued service-history data.
+The next stage will build analytical and machine-learning features from the cleaned and normalized data.
 
-The raw dataset will remain unchanged while cleaned data is produced in the staging layer.
+Before feature engineering, service-name standardization may be performed as a separate data-quality step where semantic duplicates or inconsistent service names are identified and validated.
 
 ---
 
@@ -666,10 +728,6 @@ The raw dataset will remain unchanged while cleaned data is produced in the stag
 As development continues, the project will progress through:
 
 ```text
-Phase 7
-Data Normalization
-        │
-        ▼
 Phase 8
 Feature Engineering
         │
@@ -691,7 +749,3 @@ Final Documentation
 ```
 
 The final objective is a reproducible SQL Server pipeline that demonstrates the complete progression from raw source data to a validated analytical and machine-learning-ready dataset.
-
----
-
-# Vehicle Service Repair SQL Data Pipeline
