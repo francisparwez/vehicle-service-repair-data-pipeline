@@ -81,6 +81,7 @@ Transformation
     ▼
 ┌──────────────┐
 │  ANALYTICS   │
+│ Normalized & │
 │ Analytical   │
 │   Models     │
 └──────────────┘
@@ -89,13 +90,19 @@ Transformation
 Feature Engineering
     │
     ▼
-┌──────────────┐
-│      ML      │
-│ Feature Set  │
-└──────────────┘
+analytics.vehicle_service_features
     │
     ▼
-Validated ML-Ready Dataset
+Exploratory Data Analysis
+    │
+    ▼
+Data Validation
+    │
+    ▼
+┌──────────────┐
+│      ML      │
+│ ML-Ready Set │
+└──────────────┘
 ```
 
 ---
@@ -579,6 +586,91 @@ be applied.
 
 ---
 
+## Phase 8 — Feature Engineering
+
+**Status: Complete**
+
+The normalized service-history data and cleaned vehicle-service data were used to create customer-level analytical features.
+
+The feature-engineering process produces:
+
+`analytics.vehicle_service_features`
+
+This table contains one row per customer and combines service activity, vehicle information, problem categories, solution categories, and derived analytical features.
+
+### Features Created
+
+| Feature                  | Description                                                       |
+| ------------------------ | ----------------------------------------------------------------- |
+| `service_count`          | Number of normalized service records associated with the customer |
+| `multiple_services_flag` | Indicates whether the customer has multiple service records       |
+| `problem_category`       | Categorized vehicle problem                                       |
+| `solution_category`      | Categorized solution/action                                       |
+| `manufacturer`           | Standardized vehicle manufacturer                                 |
+| `vehicle_model`          | Standardized vehicle model                                        |
+| `model_known_flag`       | Indicates whether a standardized vehicle model is available       |
+| `problem_solution_path`  | Combined problem and solution category                            |
+
+### Solution Categorization
+
+A solution mapping table is created in the `stg` schema using keyword-based categorization rules derived from the cleaned solution values.
+
+The current categories include:
+
+- Repair
+- Replacement
+- Adjustment
+- Cleaning
+- Diagnostic
+- Maintenance
+- Other
+
+### Problem Categorization
+
+Vehicle problems are grouped into analytical categories including:
+
+- Braking
+- Engine
+- Tires & Wheels
+- Lighting
+- Electrical
+- Transmission
+- Exhaust
+- Steering
+- Other
+
+### Customer-Level Feature Table
+
+The resulting feature table is:
+
+```text
+analytics.vehicle_service_features
+```
+
+---
+
+### Feature Validation
+
+The feature-engineering script includes validation checks to verify the resulting feature set.
+
+The validation checks cover:
+
+- Total feature row count
+- Customer uniqueness
+- Multi-service distribution
+- Service-count distribution
+- Minimum, maximum, and average service counts
+- Problem-category distribution
+- Solution-category distribution
+- Problem/solution path distribution
+- Manufacturer and model availability
+- Missing problem, solution, and problem/solution path values
+- Overall feature summary
+
+These checks help confirm that the engineered features were populated correctly and that the resulting customer-level feature table is suitable for the next analytical stage.
+
+---
+
 # Repository Structure
 
 The project is being developed using the following structure:
@@ -599,7 +691,8 @@ vehicle-service-repair-data-pipeline/
 │   ├── 05_data_quality_audit.sql
 │   ├── 06_reference_mapping_tables.sql
 │   ├── 07_create_clean_tables__clean_transform.sql
-│   └── 08_normalize_service_history__standardize-names.sql
+│   ├── 08_normalize_service_history__standardize-names.sql
+│   └── 09_feature_engineering.sql
 │
 └── README.md
 ```
@@ -620,7 +713,7 @@ vehicle-service-repair-data-pipeline/
 | 5     | Data cleansing & standardization   | ✅ Complete |
 | 6     | Data transformation                | ✅ Complete |
 | 7     | Data normalization                 | ✅ Complete |
-| 8     | Feature engineering                | ⏳ Planned  |
+| 8     | Feature engineering                | ✅ Complete |
 | 9     | Exploratory data analysis          | ⏳ Planned  |
 | 10    | Data validation                    | ⏳ Planned  |
 | 11    | ML-ready dataset publication       | ⏳ Planned  |
@@ -647,6 +740,12 @@ vehicle-service-repair-data-pipeline/
 - `STRING_SPLIT()`
 - `CROSS APPLY`
 - One-to-many relational transformations
+- Feature engineering
+- CTE-based feature construction
+- Customer-level aggregation
+- Keyword-based categorical mapping
+- Analytical feature construction
+- Feature validation
 
 ### Data Engineering
 
@@ -691,7 +790,7 @@ vehicle-service-repair-data-pipeline/
 
 # Project Status
 
-🚧 **Currently in development**
+🚧 **Currently in development — Phase 8 complete**
 
 ## Completed
 
@@ -712,26 +811,30 @@ vehicle-service-repair-data-pipeline/
 - Service-history normalization
 - Semi-structured service-history decomposition
 - Normalized customer-service relationship table
+- Solution-category mapping
+- Customer service-count feature
+- Multi-service indicator
+- Problem categorization
+- Solution categorization
+- Manufacturer feature
+- Model availability flag
+- Problem/solution path feature
+- Customer-level analytical feature table
+- Feature-engineering validation checks
 
 ## Next
 
-**Phase 8 — Feature Engineering**
+### Phase 9 — Exploratory Data Analysis
 
-The next stage will build analytical and machine-learning features from the cleaned and normalized data.
-
-Before feature engineering, service-name standardization may be performed as a separate data-quality step where semantic duplicates or inconsistent service names are identified and validated.
+The next stage will explore the engineered customer-level features to identify distributions, patterns, relationships, and potential analytical insights before final validation and ML-ready publication.
 
 ---
 
 # Future Pipeline
 
-As development continues, the project will progress through:
+With feature engineering complete, the remaining development stages are:
 
 ```text
-Phase 8
-Feature Engineering
-        │
-        ▼
 Phase 9
 Exploratory Data Analysis
         │
