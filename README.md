@@ -649,6 +649,68 @@ analytics.vehicle_service_features
 
 ---
 
+## Phase 9 — Exploratory Data Analysis ✅
+
+**Status: Complete**
+
+The engineered customer-level feature table was analyzed using a dedicated read-only EDA script.
+
+The purpose of this phase was to explore the engineered dataset, identify distributions and relationships, investigate remaining data-quality issues, and verify consistency across the RAW, STAGING, and ANALYTICS layers before final validation.
+
+### EDA Coverage
+
+The exploratory analysis includes:
+
+- Total customer count
+- Service-count distribution
+- Multiple-service customer distribution
+- Manufacturer distribution
+- Manufacturer mapping coverage
+- Unmapped vehicle-company investigation
+- Standardized vehicle-company mapping review
+- Malformed vehicle-company investigation
+- Problem-category distribution
+- Solution-category distribution
+- Problem/solution relationships
+- Manufacturer vs problem-category analysis
+- Manufacturer service-count analysis
+- Vehicle-model distribution
+- Model availability by manufacturer
+- Overall service-count summary
+- Problem/solution path distribution
+- Cross-layer customer-count validation
+
+### Data-Quality Investigation
+
+The EDA identified and investigated remaining vehicle-company mapping gaps and malformed source values.
+
+Malformed vehicle-company values were traced back to their original RAW records to maintain data lineage and support source-level investigation.
+
+### Cross-Layer Validation
+
+The final EDA check compared row counts and distinct customer counts across the pipeline:
+
+| Data Layer         | Row Count | Distinct Customers |
+| ------------------ | --------: | -----------------: |
+| RAW                |       508 |                500 |
+| STAGING            |       500 |                500 |
+| ANALYTICS FEATURES |       500 |                500 |
+
+This confirms that:
+
+- The RAW layer contains 508 source records and 500 distinct customers.
+- The STAGING layer contains 500 cleaned customer records.
+- The ANALYTICS feature layer contains 500 customer-level feature records.
+- No unexpected row multiplication occurred between the staging and analytical feature layers.
+
+### EDA Design Principle
+
+The EDA script is read-only. It does not modify source, staging, or analytical tables.
+
+The original exploratory script is retained as a development/history reference, while the cleaned EDA script provides the structured Phase 9 implementation.
+
+---
+
 ### Feature Validation
 
 The feature-engineering script includes validation checks to verify the resulting feature set.
@@ -692,7 +754,9 @@ vehicle-service-repair-data-pipeline/
 │   ├── 06_reference_mapping_tables.sql
 │   ├── 07_create_clean_tables__clean_transform.sql
 │   ├── 08_normalize_service_history__standardize-names.sql
-│   └── 09_feature_engineering.sql
+│   ├── 09_feature_engineering.sql
+│   ├── 10_exploratory_data_analysis.sql
+│   └── 11_exploratory_data_analysis_clean.sql
 │
 └── README.md
 ```
@@ -714,7 +778,7 @@ vehicle-service-repair-data-pipeline/
 | 6     | Data transformation                | ✅ Complete |
 | 7     | Data normalization                 | ✅ Complete |
 | 8     | Feature engineering                | ✅ Complete |
-| 9     | Exploratory data analysis          | ⏳ Planned  |
+| 9     | Exploratory data analysis          | ✅ Complete |
 | 10    | Data validation                    | ⏳ Planned  |
 | 11    | ML-ready dataset publication       | ⏳ Planned  |
 | 12    | Final documentation                | ⏳ Planned  |
@@ -790,7 +854,7 @@ vehicle-service-repair-data-pipeline/
 
 # Project Status
 
-🚧 **Currently in development — Phase 8 complete**
+🚧 **Currently in development — Phase 9 complete**
 
 ## Completed
 
@@ -821,12 +885,14 @@ vehicle-service-repair-data-pipeline/
 - Problem/solution path feature
 - Customer-level analytical feature table
 - Feature-engineering validation checks
+- Exploratory data analysis
+- Cross-layer customer-count validation
 
 ## Next
 
-### Phase 9 — Exploratory Data Analysis
+### Phase 10 — Data Validation
 
-The next stage will explore the engineered customer-level features to identify distributions, patterns, relationships, and potential analytical insights before final validation and ML-ready publication.
+The next stage will perform systematic validation of the cleaned staging and analytical feature layers before publishing the final ML-ready dataset.
 
 ---
 
