@@ -733,6 +733,88 @@ These checks help confirm that the engineered features were populated correctly 
 
 ---
 
+## Phase 10 — Data Validation ✅
+
+**Status: Complete**
+
+The cleaned staging and analytical feature layers were systematically validated before progressing to ML-ready dataset publication.
+
+### Validation Coverage
+
+The validation script checks:
+
+- RAW row count
+- RAW unique customer count
+- RAW duplicate records
+- STAGING row count
+- STAGING unique customers
+- ANALYTICS feature row count
+- ANALYTICS unique customers
+- Invalid multiple-service flags
+- Invalid service counts
+- Missing problem categories
+- Missing solution categories
+- NULL customer IDs
+- Service-count consistency between staging and analytics
+- Customer-level consistency across pipeline layers
+- Unmapped manufacturers
+
+### Validation Results
+
+| Validation Check               | Result | Status  |
+| ------------------------------ | -----: | ------- |
+| RAW Row Count                  |    508 | PASS    |
+| RAW Unique Customers           |    500 | PASS    |
+| RAW Duplicate Records          |      8 | PASS    |
+| STAGING Row Count              |    500 | PASS    |
+| STAGING Unique Customers       |    500 | PASS    |
+| ANALYTICS Feature Row Count    |    500 | PASS    |
+| ANALYTICS Unique Customers     |    500 | PASS    |
+| Invalid Multiple-Service Flags |      0 | PASS    |
+| Invalid Service Counts         |      0 | PASS    |
+| Missing Problem Categories     |      0 | PASS    |
+| Missing Solution Categories    |      0 | PASS    |
+| NULL Customer IDs              |      0 | PASS    |
+| Service Count Mismatches       |      0 | PASS    |
+| Unmapped Manufacturers         |    346 | WARNING |
+
+### Cross-Layer Validation
+
+| Data Layer         | Row Count | Distinct Customers |
+| ------------------ | --------: | -----------------: |
+| RAW                |       508 |                500 |
+| STAGING            |       500 |                500 |
+| ANALYTICS FEATURES |       500 |                500 |
+
+The validation confirms that:
+
+- The RAW layer contains 508 source records.
+- The RAW layer contains 500 distinct customers.
+- 8 exact duplicate records exist in the source.
+- The STAGING layer contains 500 cleaned customer records.
+- The ANALYTICS feature layer contains 500 customer-level records.
+- Customer counts remain consistent between STAGING and ANALYTICS.
+- No unexpected row multiplication was detected.
+- Service-count calculations are consistent between layers.
+- No NULL customer IDs exist in the analytical feature table.
+- No missing problem or solution categories were detected.
+
+### Validation Warning
+
+The validation identified **346 analytical records with an unmapped manufacturer**.
+
+This is classified as a **WARNING rather than a pipeline failure** because the current vehicle-company reference mapping does not cover every source vehicle-company value.
+
+The unmapped values remain traceable through the source vehicle-company field and can be addressed through future mapping-table improvements.
+
+### Validation Outcome
+
+**Phase 10 is complete.**
+
+The staging and analytical layers have passed the structural and consistency checks required before proceeding to ML-ready dataset publication.
+
+---
+
 # Repository Structure
 
 The project is being developed using the following structure:
@@ -756,7 +838,8 @@ vehicle-service-repair-data-pipeline/
 │   ├── 08_normalize_service_history__standardize-names.sql
 │   ├── 09_feature_engineering.sql
 │   ├── 10_exploratory_data_analysis.sql
-│   └── 11_exploratory_data_analysis_clean.sql
+│   ├── 11_exploratory_data_analysis_clean.sql
+│   └── 12_data_validation.sql
 │
 └── README.md
 ```
@@ -779,7 +862,7 @@ vehicle-service-repair-data-pipeline/
 | 7     | Data normalization                 | ✅ Complete |
 | 8     | Feature engineering                | ✅ Complete |
 | 9     | Exploratory data analysis          | ✅ Complete |
-| 10    | Data validation                    | ⏳ Planned  |
+| 10    | Data validation                    | ✅ Complete |
 | 11    | ML-ready dataset publication       | ⏳ Planned  |
 | 12    | Final documentation                | ⏳ Planned  |
 
@@ -854,7 +937,7 @@ vehicle-service-repair-data-pipeline/
 
 # Project Status
 
-🚧 **Currently in development — Phase 9 complete**
+🚧 **Currently in development — Phase 10 complete**
 
 ## Completed
 
@@ -887,32 +970,30 @@ vehicle-service-repair-data-pipeline/
 - Feature-engineering validation checks
 - Exploratory data analysis
 - Cross-layer customer-count validation
+- Data validation
+- Staging and analytical consistency checks
+- Service-count validation
+- Customer-level validation
 
 ## Next
 
-### Phase 10 — Data Validation
+### Phase 11 — ML-Ready Dataset Publication
 
-The next stage will perform systematic validation of the cleaned staging and analytical feature layers before publishing the final ML-ready dataset.
+The next stage will publish the validated analytical features into the `ml` schema as a final machine-learning-ready dataset.
 
 ---
 
 # Future Pipeline
 
-With feature engineering complete, the remaining development stages are:
+With data validation complete, the remaining development stages are:
 
 ```text
-Phase 9
-Exploratory Data Analysis
-        │
-        ▼
-Phase 10
-Data Validation
-        │
-        ▼
 Phase 11
 ML-Ready Dataset Publication
+
         │
         ▼
+
 Phase 12
 Final Documentation
 ```
