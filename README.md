@@ -213,12 +213,9 @@ The raw table contains the seven source columns from the CSV dataset. All source
 
 ### Raw Table Verification
 
-After creating the raw table, the script verifies the table structure using
-`INFORMATION_SCHEMA.COLUMNS` to confirm that the expected columns and data
-types are present.
+After creating the raw table, the script verifies the table structure using `INFORMATION_SCHEMA.COLUMNS` to confirm that the expected columns and data types are present.
 
-A row-count check is also performed to confirm that the raw table is empty
-before CSV ingestion.
+A row-count check is also performed to confirm that the raw table is empty before CSV ingestion.
 
 ```sql
 CREATE TABLE raw.vehicle_service
@@ -386,8 +383,7 @@ All source columns are compared together to identify records where the complete 
 
 #### Duplicate Customer IDs
 
-Customer IDs are independently checked for multiple occurrences. This helps distinguish repeated business identifiers from exact duplicate
-records.
+Customer IDs are independently checked for multiple occurrences. This helps distinguish repeated business identifiers from exact duplicate records.
 
 #### Whitespace Issues
 
@@ -815,6 +811,120 @@ The staging and analytical layers have passed the structural and consistency che
 
 ---
 
+## Phase 11 --- ML-Ready Dataset Publication
+
+**Status: Complete**
+
+The validated analytical feature set has been published into the `ml` schema as the final machine-learning-ready dataset.
+
+### ML Dataset
+
+The final dataset is stored in:
+
+```text
+ml.vehicle_service_features
+```
+
+It contains one customer-level record per customer and combines cleaned vehicle information with engineered service and problem/solution features.
+
+### Final ML Dataset Columns
+
+---
+
+Column Description
+
+---
+
+`customer_id` Unique customer identifier
+
+`manufacturer` Standardized vehicle manufacturer
+
+`vehicle_model` Standardized vehicle model
+
+`vehicle_type` Standardized vehicle type
+
+`city` Cleaned city
+
+`state_name` Cleaned state
+
+`problem_category` Engineered vehicle-problem category
+
+`solution_category` Engineered solution category
+
+`service_count` Number of normalized service records
+
+`multiple_services_flag` Indicates whether multiple services are
+recorded
+
+`model_known_flag` Indicates whether a standardized vehicle
+model is available
+
+---
+
+### ML Publication Process
+
+The Phase 11 workflow includes:
+
+- Creating the `ml` schema
+- Creating the final `ml.vehicle_service_features` table
+- Publishing validated data from the `analytics` and `stg` layers
+- Verifying ML row counts and customer uniqueness
+- Checking source-to-ML customer coverage
+- Validating required fields and engineered feature values
+- Running final ML-readiness checks
+- Reviewing a final ML dataset snapshot
+
+### ML Dataset Validation
+
+Validation Metric Result
+
+---
+
+ML row count 500
+Unique customers 500
+Duplicate customer records 0
+Customers missing from staging 0
+ML records not present in analytics 0
+Missing customer IDs 0
+Missing cities 0
+Missing states 0
+Missing problem categories 0
+Missing solution categories 0
+Invalid service counts 0
+Invalid multiple-service flags 0
+Invalid model-known flags 0
+
+### ML Readiness Summary
+
+The final readiness checks confirm that the dataset is structurally consistent and contains valid customer-level analytical features.
+
+The vehicle attributes remain partially sparse because the source mapping does not cover every vehicle-company value:
+
+- `manufacturer`: 346 NULL values
+- `vehicle_model`: 485 NULL values
+- `vehicle_type`: 452 NULL values
+- Customers with partial or complete vehicle information: 154
+
+These missing vehicle attributes are documented rather than artificially imputed. The dataset is therefore ready for downstream machine-learning workflows where model-specific handling of missing categorical vehicle
+information can be applied.
+
+### Final Dataset Snapshot
+
+The final ML dataset was reviewed at customer level to confirm that the published records contain:
+
+- Customer identifiers
+- Vehicle attributes
+- Location attributes
+- Problem categories
+- Solution categories
+- Service-count features
+- Multi-service indicators
+- Model-availability indicators
+
+The final publication preserves the layered architecture of the project while providing a dedicated downstream dataset under the `ml` schema.
+
+---
+
 # Repository Structure
 
 The project is being developed using the following structure:
@@ -839,13 +949,17 @@ vehicle-service-repair-data-pipeline/
 │   ├── 09_feature_engineering.sql
 │   ├── 10_exploratory_data_analysis.sql
 │   ├── 11_exploratory_data_analysis_clean.sql
-│   └── 12_data_validation.sql
+│   ├── 12_data_validation.sql
+│   ├── 13_create_ml_schema.sql
+│   ├── 14_create_ml_table.sql
+│   ├── 15_publish_ml_dataset.sql
+│   ├── 16_validate_ml_dataset.sql
+│   └── 17_ml_readiness_checks.sql
 │
 └── README.md
 ```
 
-> **Note:** The repository structure reflects the current state of the project.
-> SQL scripts and documentation are being added incrementally as each phase is completed.
+> **Note:** The repository structure reflects the current state of the project. SQL scripts and documentation are being added incrementally as each phase is completed.
 
 ---
 
@@ -863,7 +977,7 @@ vehicle-service-repair-data-pipeline/
 | 8     | Feature engineering                | ✅ Complete |
 | 9     | Exploratory data analysis          | ✅ Complete |
 | 10    | Data validation                    | ✅ Complete |
-| 11    | ML-ready dataset publication       | ⏳ Planned  |
+| 11    | ML-ready dataset publication       | ✅ Complete |
 | 12    | Final documentation                | ⏳ Planned  |
 
 ---
@@ -893,6 +1007,10 @@ vehicle-service-repair-data-pipeline/
 - Keyword-based categorical mapping
 - Analytical feature construction
 - Feature validation
+- ML dataset construction
+- ML schema and table design
+- Customer-level feature publication
+- ML readiness validation
 
 ### Data Engineering
 
@@ -911,6 +1029,9 @@ vehicle-service-repair-data-pipeline/
 - Relational data normalization
 - Semi-structured data decomposition
 - One-to-many relationship modeling
+- ML-ready dataset publication
+- Cross-layer dataset validation
+- Downstream dataset preparation
 
 ### Data Quality
 
@@ -937,7 +1058,7 @@ vehicle-service-repair-data-pipeline/
 
 # Project Status
 
-🚧 **Currently in development — Phase 10 complete**
+🚧 **Currently in development --- Phase 11 complete**
 
 ## Completed
 
@@ -974,28 +1095,76 @@ vehicle-service-repair-data-pipeline/
 - Staging and analytical consistency checks
 - Service-count validation
 - Customer-level validation
+- ML schema creation
+- ML table creation
+- ML dataset publication
+- ML dataset validation
+- ML readiness checks
+- Final ML dataset snapshot
 
 ## Next
 
-### Phase 11 — ML-Ready Dataset Publication
+### Phase 12 --- Final Documentation
 
-The next stage will publish the validated analytical features into the `ml` schema as a final machine-learning-ready dataset.
+The final stage will consolidate the completed pipeline, document the
+final dataset, summarize key data-quality findings and analytical
+results, and prepare the repository for final presentation.
 
 ---
 
 # Future Pipeline
 
-With data validation complete, the remaining development stages are:
+With ML-ready dataset publication complete, the remaining development
+stage is:
 
 ```text
-Phase 11
-ML-Ready Dataset Publication
-
-        │
-        ▼
-
 Phase 12
 Final Documentation
 ```
 
 The final objective is a reproducible SQL Server pipeline that demonstrates the complete progression from raw source data to a validated analytical and machine-learning-ready dataset.
+
+## Current End-to-End Pipeline
+
+```text
+Kaggle CSV
+    │
+    ▼
+RAW
+    │
+    ▼
+Data Profiling & Quality Audit
+    │
+    ▼
+STAGING
+    │
+    ▼
+Cleaning & Transformation
+    │
+    ▼
+Normalization
+    │
+    ▼
+ANALYTICS
+    │
+    ▼
+Feature Engineering
+    │
+    ▼
+Exploratory Data Analysis
+    │
+    ▼
+Data Validation
+    │
+    ▼
+ML
+    │
+    ▼
+ML Dataset Publication
+    │
+    ▼
+ML Readiness Checks
+    │
+    ▼
+Final Documentation
+```
